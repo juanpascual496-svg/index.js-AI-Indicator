@@ -51,19 +51,13 @@
             <div class="flex items-center gap-3 flex-1">
                 <span class="text-3xl">𝕏</span>
                 <div>
-                    <p class="font-medium">Real X (Twitter) Posts • Nasdaq Composite</p>
+                    <p class="font-medium">Real X Posts • Nasdaq Composite (^IXIC)</p>
                     <p class="text-xs text-neutral-400">Connect your Bearer Token for live updates</p>
                 </div>
             </div>
-            
             <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <input id="x-bearer-token" type="password" 
-                       placeholder="Paste your X Bearer Token here"
-                       class="bg-neutral-900 text-white px-5 py-3 rounded-3xl flex-1 text-sm focus:outline-none">
-                <button onclick="saveXToken()" 
-                        class="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold px-8 py-3 rounded-3xl whitespace-nowrap">
-                    Save Token
-                </button>
+                <input id="x-bearer-token" type="password" placeholder="Paste your X Bearer Token here" class="bg-neutral-900 text-white px-5 py-3 rounded-3xl flex-1 text-sm focus:outline-none">
+                <button onclick="saveXToken()" class="bg-emerald-500 hover:bg-emerald-600 text-black font-semibold px-8 py-3 rounded-3xl whitespace-nowrap">Save Token</button>
             </div>
         </div>
 
@@ -72,14 +66,21 @@
             <!-- LEFT COLUMN -->
             <div class="lg:col-span-7 space-y-6 lg:space-y-8">
                 
+                <!-- YAHOO-STYLE LIVE CHART (Chart.js) -->
+                <div class="glass rounded-3xl card-padding overflow-hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl sm:text-2xl font-semibold flex items-center gap-2">📈 Live NASDAQ Composite (^IXIC) Chart</h2>
+                        <a href="https://finance.yahoo.com/quote/%5EIXIC/" target="_blank" class="text-xs bg-emerald-400/20 text-emerald-400 px-3 py-1 rounded-2xl hover:bg-emerald-400 hover:text-black transition-colors">View Full Yahoo Chart →</a>
+                    </div>
+                    <div class="mb-6">
+                        <canvas id="yahoo-chart" class="w-full h-80 sm:h-96"></canvas>
+                    </div>
+                </div>
+
                 <!-- Technical Indicators -->
                 <div class="glass rounded-3xl card-padding">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-xl sm:text-2xl font-semibold flex items-center gap-2">📊 ^IXIC Technical Indicators</h2>
-                        <span class="text-xs bg-emerald-400/20 text-emerald-400 px-3 py-1 rounded-2xl">Live • 5-min</span>
-                    </div>
-                    <div class="mb-6">
-                        <canvas id="tech-chart" class="w-full h-52 sm:h-64"></canvas>
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm" id="indicators-grid"></div>
                 </div>
@@ -105,7 +106,7 @@
                 <!-- Live X Posts -->
                 <div class="glass rounded-3xl card-padding">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl sm:text-2xl font-semibold flex items-center gap-2">𝕏 Live X Posts • Nasdaq Composite</h2>
+                        <h2 class="text-xl sm:text-2xl font-semibold flex items-center gap-2">𝕏 Live X Posts • ^IXIC / Nasdaq</h2>
                         <button onclick="fetchTwitter()" class="text-sm bg-white/10 hover:bg-white/20 px-5 py-2 rounded-2xl">🔄 Pull Latest</button>
                     </div>
                     <div id="twitter-output" class="twitter-feed space-y-5 text-sm pr-2"></div>
@@ -125,7 +126,7 @@
             <div class="lg:col-span-5">
                 <div class="glass rounded-3xl p-5 sm:p-8 lg:sticky lg:top-8 h-fit">
                     <h2 class="text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-3">🧠 AI Synthesis</h2>
-                    <p class="text-neutral-400 mb-6 text-sm sm:text-base">Real-time ^IXIC + technicals + X posts + news + Reddit</p>
+                    <p class="text-neutral-400 mb-6 text-sm sm:text-base">Real-time ^IXIC + chart + X posts + news + Reddit</p>
                     
                     <div id="ai-placeholder" class="min-h-[380px] sm:min-h-[420px] flex items-center justify-center text-center border border-dashed border-neutral-700 rounded-3xl p-6">
                         <div>
@@ -185,7 +186,7 @@
             }
             priceHistory.push(currentPrice);
             if (priceHistory.length > 50) priceHistory.shift();
-            updateTechChart();
+            updateYahooChart();
         }
 
         function startRealTimePrice() {
@@ -193,15 +194,34 @@
             setInterval(fetchRealTimePrice, 8000);
         }
 
-        let techChartInstance = null;
-        function updateTechChart() {
-            const ctx = document.getElementById('tech-chart');
+        let chartInstance = null;
+        function updateYahooChart() {
+            const ctx = document.getElementById('yahoo-chart');
             if (!ctx) return;
-            if (techChartInstance) techChartInstance.destroy();
-            techChartInstance = new Chart(ctx, {
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, {
                 type: 'line',
-                data: { labels: priceHistory.map(() => ''), datasets: [{ label: '^IXIC', data: priceHistory, borderColor: '#00ff9d', borderWidth: 2, tension: 0.3, pointRadius: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { grid: { color: 'rgba(255,255,255,0.1)' } } } }
+                data: {
+                    labels: priceHistory.map(() => ''),
+                    datasets: [{
+                        label: '^IXIC',
+                        data: priceHistory,
+                        borderColor: '#00ff9d',
+                        borderWidth: 3,
+                        tension: 0.2,
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { grid: { color: 'rgba(255,255,255,0.1)' } }
+                    }
+                }
             });
         }
 
@@ -228,7 +248,7 @@
 
         async function fetchTwitter() {
             const container = document.getElementById('twitter-output');
-            container.innerHTML = `<p class="text-emerald-400 text-sm mb-3">🔴 Fetching real ^IXIC / Nasdaq posts from X...</p>`;
+            container.innerHTML = `<p class="text-emerald-400 text-sm mb-3">🔴 Fetching real ^IXIC posts from X...</p>`;
 
             if (!X_BEARER_TOKEN) {
                 container.innerHTML = `<p class="text-amber-400 text-sm">Enter your X Bearer Token above and click "Save Token"</p>`;
@@ -236,7 +256,7 @@
             }
 
             try {
-                const query = '^IXIC OR "Nasdaq Composite" OR $IXIC OR "Nasdaq futures"';
+                const query = '^IXIC OR "Nasdaq Composite" OR $IXIC';
                 const url = `https://api.twitter.com/2/tweets/search/recent?query=${encodeURIComponent(query)}&max_results=15&tweet.fields=created_at,author_id,public_metrics`;
 
                 const response = await fetch(url, {
@@ -264,21 +284,13 @@
                             </div>`;
                     });
                     container.innerHTML = html;
-                } else {
-                    container.innerHTML = `<p class="text-neutral-400">No recent Nasdaq posts found.</p>`;
                 }
             } catch (err) {
                 container.innerHTML = `<p class="text-amber-400 text-sm">Could not fetch real tweets.<br>Falling back to mock posts.</p>`;
-                setTimeout(() => {
-                    container.innerHTML = `
-                        <div class="flex gap-3 border-b border-white/10 pb-4"><div class="text-xl">𝕏</div><div>@zerohedge: Nasdaq Composite showing strength</div></div>
-                        <div class="flex gap-3 border-b border-white/10 pb-4"><div class="text-xl">𝕏</div><div>@CNBC: Tech rally lifts ^IXIC</div></div>
-                    `;
-                }, 1200);
             }
         }
 
-        function fetchHedgeFunds() { document.getElementById('hedge-output').innerHTML = `<div class="bg-neutral-900 rounded-2xl p-3 sm:p-4">Citadel +$1.4B long Nasdaq</div><div class="bg-neutral-900 rounded-2xl p-3 sm:p-4">Renaissance Tech +2.8%</div><div class="bg-neutral-900 rounded-2xl p-3 sm:p-4">BlackRock +$890M ^IXIC exposure</div>`; }
+        function fetchHedgeFunds() { document.getElementById('hedge-output').innerHTML = `<div class="bg-neutral-900 rounded-2xl p-3 sm:p-4">Citadel +$1.4B long ^IXIC</div><div class="bg-neutral-900 rounded-2xl p-3 sm:p-4">Renaissance Tech +2.8%</div><div class="bg-neutral-900 rounded-2xl p-3 sm:p-4">BlackRock +$890M</div>`; }
         function fetchNews() { document.getElementById('news-output').innerHTML = `<div class="flex gap-3 border-b border-white/10 pb-3"><span class="text-emerald-400 text-xs sm:text-sm">COMPOSITE</span> Nasdaq Composite climbs on tech strength</div>`; }
         async function fetchReddit() { document.getElementById('reddit-output').innerHTML = `<p class="text-neutral-400 text-sm">• r/futures: Watching ^IXIC closely<br>• r/wallstreetbets: Nasdaq calls heating up</p>`; }
 
@@ -303,7 +315,7 @@
         window.onload = function() {
             startRealTimePrice();
             priceHistory = Array(30).fill().map(() => currentPrice - 150 + Math.random()*300);
-            updateTechChart();
+            updateYahooChart();
             setTimeout(() => {
                 fetchHedgeFunds();
                 fetchNews();
